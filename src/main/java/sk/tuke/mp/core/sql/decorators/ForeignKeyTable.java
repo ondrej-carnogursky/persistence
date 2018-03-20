@@ -5,13 +5,10 @@ import sk.tuke.mp.core.sql.Field;
 import sk.tuke.mp.core.sql.Table;
 import sk.tuke.mp.core.sql.commands.SQLDialects;
 
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ForeignKeyTable extends Table implements DialectDependentDecorator, AdditionalDecorator  {
 
@@ -31,12 +28,7 @@ public class ForeignKeyTable extends Table implements DialectDependentDecorator,
         this.myFields.add(field);
     }
 
-    public ForeignKeyTable(Field field, Field foreignField) {
-        this(field.getTable(), field, foreignField);
-    }
-
     public String toStringDecoration(SQLDialects dialect) {
-
         List<String> result = new ArrayList<>();
         for (Map.Entry<Table, List<Field>> foreignEntry : foreignFields.entrySet()) {
             String myColumns = String.join(", ", Field.getFieldNames(myFields));
@@ -44,7 +36,7 @@ public class ForeignKeyTable extends Table implements DialectDependentDecorator,
             if(dialect == SQLDialects.POSTGRES) {
                 result.add(String.format("FOREIGN KEY (%s) REFERENCES %s (%s)\n", myColumns, foreignEntry.getKey().getName(), foreignColumns));
             } else {
-                foreignKeyName = String.format("FK_%s", getName() + foreignEntry.getKey().getName());
+                foreignKeyName = String.format("FK_%s", getName() + "_" + foreignEntry.getKey().getName());
                 result.add(String.format("CONSTRAINT %s FOREIGN KEY (%s)\n" +
                         "REFERENCES %s(%s)", foreignKeyName, myColumns, foreignEntry.getKey().getName(), foreignColumns));
             }
@@ -56,16 +48,8 @@ public class ForeignKeyTable extends Table implements DialectDependentDecorator,
         return myFields;
     }
 
-    public void setMyFields(List<Field> myFields) {
-        this.myFields = myFields;
-    }
-
     public Map<Table, List<Field>> getForeignFields() {
         return foreignFields;
-    }
-
-    public boolean isForeignKey(Field field) {
-        return myFields.contains(field);
     }
 
     public Field getForeignField(Field myField) {
@@ -82,10 +66,5 @@ public class ForeignKeyTable extends Table implements DialectDependentDecorator,
             this.foreignFields.put(foreignField.getTable(), foreigns);
         }
         foreigns.add(foreignField);
-    }
-
-
-    public void propagate(Object obj) {
-
     }
 }

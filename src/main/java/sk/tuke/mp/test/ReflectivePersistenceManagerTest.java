@@ -44,13 +44,13 @@ public class ReflectivePersistenceManagerTest {
     }
 
     //@Test
-    public void createTables() throws SQLException {
+    public void createTables() { // throws SQLException {
         try {
             manager.createTables(Product.class, Category.class);
             // Change in schema happened
             boolean productCreated = false;
             boolean categoryCreated = false;
-            ResultSet rs = ((SQLiteConnection) connection).getMetaData().getTables(null, null, "%", null);
+            ResultSet rs = connection.getMetaData().getTables(null, null, "%", null);
             while(rs.next()) {
                 if(!rs.getString(4).equalsIgnoreCase("TABLE")) {
                     continue;

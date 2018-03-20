@@ -33,19 +33,6 @@ public class Field {
         decorators.add(this);
     }
 
-    public static Field create(String name, FieldTypes type, List<String> arguments) {
-        Field f = new Field();
-        f.setName(name);
-        f.setType(type);
-        f.setArguments(arguments);
-        return f;
-    }
-
-
-    public static Field create(String name, FieldTypes type, String... arguments) {
-        return create(name, type, Arrays.asList(arguments));
-    }
-
     public static Field create(String name, FieldTypes type) {
         Field f = new Field();
         f.setName(name);
@@ -59,11 +46,11 @@ public class Field {
         return String.format("%c%s%c %s%s %s", '"', name, '"', type.toString(), formatArguments(), formatDecorators());
     }
 
-    private String formatArguments() {
+    public String formatArguments() {
         return arguments.size() > 0 ? '(' + String.join(", ", arguments) + ')' : "";
     }
 
-    private String formatDecorators() {
+    public String formatDecorators() {
         StringBuilder decoratorsSb = new StringBuilder();
         for(Field decorator : decorators) {
             if(!(decorator instanceof AdditionalDecorator)) {
@@ -90,9 +77,7 @@ public class Field {
         return type;
     }
 
-    public String getOriginalName() {
-        return originalName != null ? originalName : name;
-    }
+    public String getOriginalName() {return originalName; }
 
     public void setOriginalName(String originalName) {
         this.originalName = originalName;
@@ -110,10 +95,6 @@ public class Field {
         }
     }
 
-    public void setArguments(String... arguments) {
-        this.setArguments(Arrays.asList(arguments));
-    }
-
     public Table getTable() {
         return table;
     }
@@ -124,10 +105,6 @@ public class Field {
 
     public List<Field> getDecorators() {
         return decorators;
-    }
-
-    public void addDecorator(Field decorator) {
-        this.decorators.add(decorator);
     }
 
     public String toStringDecoration() { return ""; }

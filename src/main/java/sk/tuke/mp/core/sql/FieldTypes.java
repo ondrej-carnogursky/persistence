@@ -36,7 +36,7 @@ public enum FieldTypes {
 
     public static String escapeValue(Object value) {
         if(value instanceof String) {
-            return "\"" + value + "\"";
+            return "'" + value + "'";
         }
         return value.toString();
     }

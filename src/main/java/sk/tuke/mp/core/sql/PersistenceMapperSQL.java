@@ -42,7 +42,7 @@ public class PersistenceMapperSQL implements PersistenceMapper<Table> {
                         foreign = mapEntityClass(field.getType());
                     }
                     PrimaryKeyField foreignPrimary = foreign.getPrimaryKeyField();
-                    sqlField.setOriginalName(sqlField.getOriginalName());
+                    sqlField.setOriginalName(sqlField.getName()); // .getOriginalName());
                     sqlField.setName(sqlField.getName() + "ID");
                     sqlField.setType(foreignPrimary.getType());
                     sqlField.setArguments(foreignPrimary.getArguments());

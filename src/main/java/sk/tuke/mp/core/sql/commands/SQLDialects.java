@@ -4,7 +4,7 @@ import java.sql.Connection;
 
 public enum SQLDialects {
 
-    MYSQL, SQLITE, POSTGRES, // Community
+    MYSQL, SQLITE, POSTGRES, DERBY, // Community
     MSSQL, ORACLE, MSACCESS, // Corporate
     UNKNOWN;
 
@@ -17,6 +17,7 @@ public enum SQLDialects {
                 : connectionClsName.contains("microsoft") && connectionClsName.contains("sqlserver")  ? MSSQL
                 : connectionClsName.contains("oracle")  ? ORACLE
                 : connectionClsName.contains("microsoft") && connectionClsName.contains("access")  ? MSACCESS
+                : connectionClsName.contains("derby")  ? DERBY
                 : UNKNOWN;
     }
 }

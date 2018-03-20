@@ -5,7 +5,9 @@ import sk.tuke.mp.core.sql.Field;
 import sk.tuke.mp.core.sql.FieldTypes;
 import sk.tuke.mp.core.sql.Table;
 import sk.tuke.mp.core.sql.decorators.ForeignKeyTable;
+import sk.tuke.mp.persistence.Cache;
 import sk.tuke.mp.utils.ReflectionExtension;
+import sk.tuke.mp.utils.Semantics;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -17,36 +19,40 @@ public class Update implements Command {
     private Table table;
     private Object object;
     private PersistenceMapper<Table> mapper;
+    private Cache cache;
 
-    public Update(Object object, PersistenceMapper<Table> mapper) {
+    public Update(Object object, PersistenceMapper<Table> mapper, Cache cache) {
         this.object = object;
         this.table = mapper.getUnit(object.getClass());
         this.mapper = mapper;
+        this.cache = cache;
     }
 
     public String getQuery(Connection conn) throws SQLException {
         StringBuilder sb = new StringBuilder();
+        // start SQL statement
         sb.append("UPDATE ")
                 .append(table.getName())
                 .append(" SET ");
 
+        // gain values from object
         List<String> fieldsValues = new ArrayList<>();
-
-        if(table instanceof ForeignKeyTable) {
-            for(Field f : ((ForeignKeyTable)table).getMyFields()) {
-                Object foreignObject = ReflectionExtension.getPropertyValue(object, f.getOriginalName());
-                new InsertOrUpdate(foreignObject, mapper).execute(conn);
-
-            }
-        }
-
         for(Field field : table.getFields()) {
-            Object value = ReflectionExtension.getPropertyValue(object, field.getOriginalName());
-            if(table instanceof ForeignKeyTable && ((ForeignKeyTable)table).isForeignKey(field)) {
+            // TODO: ignore primary key??
+            Object value = null;
+            if(field.getOriginalName() != null) {
+                // foreign key field
+                Object foreignObject = ReflectionExtension.getPropertyValue(object, field.getOriginalName());
+                // recursive update/insert FK object into the DB
+                new InsertOrUpdate(foreignObject, mapper, cache).execute(conn);
+                // get FK value
                 Field foreignField = ((ForeignKeyTable)table).getForeignField(field);
-                value = ReflectionExtension.getPropertyValue(value, foreignField.getName());
+                value = ReflectionExtension.getPropertyValue(foreignObject, foreignField.getName());
+            } else {
+                // normal field
+                value = ReflectionExtension.getPropertyValue(object, field.getName());
             }
-
+            // write column-value pair into the SQL statement
             if(value != null) {
                 fieldsValues.add(new StringBuilder()
                         .append(field.getName())
@@ -56,13 +62,14 @@ public class Update implements Command {
             }
         }
 
+        // set primary key criteria and close SQL statement
         Field primaryKey = table.getPrimaryKeyField();
-
         sb.append(String.join(", ", fieldsValues))
         .append(" WHERE ")
         .append(primaryKey.getName())
         .append("=")
-        .append(ReflectionExtension.getPropertyValue(object, primaryKey.getOriginalName()));
+        .append(ReflectionExtension.getPropertyValue(object, primaryKey.getName())) // getOriginalName()));
+        .append(Semantics.getClosingChar(SQLDialects.detect(conn)));
         return sb.toString();
     }
 
